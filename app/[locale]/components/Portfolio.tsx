@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import InteractiveBackground from '../components/InteractiveBackground';
-import { useTranslations } from 'next-intl'; // <-- Импортируем useTranslations
+import { useTranslations } from 'next-intl';
 
 // Интерфейсы (без изменений)
 interface Project {
@@ -22,9 +22,9 @@ interface PortfolioClientProps {
   intro: string;
 }
 
-// --- Локализуем компонент ProjectSection ---
+// --- УЛУЧШЕННЫЙ КОМПОНЕНТ ProjectSection С МОБИЛЬНОЙ АДАПТАЦИЕЙ ---
 function ProjectSection({ project, isEven, index }: { project: Project, isEven: boolean, index: number }) {
-  const t = useTranslations('portfolio'); // <-- Получаем переводы
+  const t = useTranslations('portfolio');
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -38,11 +38,18 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
   return (
     <section 
       ref={sectionRef}
-      className={`relative py-24 md:py-40 overflow-hidden ${isEven ? 'portfolio-section' : 'portfolio-section-alt'}`}
+      className={`relative overflow-hidden 
+                 md:py-40 ${isEven ? 'md:portfolio-section' : 'md:portfolio-section-alt'}
+                 py-16`}
     >
+      {/* --- ИЗМЕНЕНИЕ: Адаптируем размер и позицию номера для мобильных --- */}
       <motion.div 
         style={{ y: yNumber }}
-        className="absolute top-10 left-1/2 -translate-x-1/2 text-[20rem] font-black text-[rgb(var(--primary))] opacity-[0.03] dark:opacity-[0.05] pointer-events-none select-none z-0"
+        className="absolute top-4 md:top-10 left-1/2 -translate-x-1/2 
+                   text-[10rem] md:text-[20rem]  // <-- Адаптивный размер шрифта
+                   font-black text-[rgb(var(--primary))] 
+                   opacity-[0.03] dark:opacity-[0.05] 
+                   pointer-events-none select-none z-0"
       >
         0{index + 1}
       </motion.div>
@@ -50,18 +57,18 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
           style={{ opacity }}
-          className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-24 items-center"
         >
           <motion.div 
             style={{ y: yImage }}
-            className={`${isEven ? 'lg:order-2' : ''}`}
+            className={`lg:order-${isEven ? '2' : '1'}`}
           >
             <motion.div 
               whileHover={{ scale: 1.02 }}
               className="project-image-wrapper group relative !rounded-none"
             >
-              <div className="absolute -inset-2 border-2 border-[rgb(var(--primary))] opacity-0 group-hover:opacity-30 transition-all duration-500 -z-10 group-hover:translate-x-4 group-hover:translate-y-4" />
-              <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" className="block overflow-hidden">
+              <div className="absolute -inset-2 border-2 border-[rgb(var(--primary))] opacity-0 group-hover:opacity-30 transition-all duration-500 -z-10 group-hover:translate-x-4 group-hover:translate-y-4 hidden md:block" />
+              <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" className="block overflow-hidden border border-[rgb(var(--border-color))]">
                 <Image
                   src={project.image}
                   alt={project.title}
@@ -73,24 +80,24 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
             </motion.div>
           </motion.div>
 
-          <div className={`${isEven ? 'lg:order-1' : ''}`}>
+          <div className={`lg:order-${isEven ? '1' : '2'}`}>
             <motion.div 
-              initial={{ opacity: 0, x: isEven ? 50 : -50 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="space-y-6"
+              viewport={{ once: true, amount: 0.3 }}
+              className="space-y-4 md:space-y-6"
             >
               <div className="inline-block">
-                <span className="text-[rgb(var(--primary))] font-mono text-sm tracking-widest mb-2 block">
+                <span className="text-[rgb(var(--primary))] font-mono text-xs md:text-sm tracking-widest mb-2 block">
                   {t('projectLabel')} _0{index + 1}
                 </span>
-                <h3 className="text-4xl md:text-5xl font-black project-title mb-4 tracking-tighter">
+                <h3 className="text-3xl md:text-5xl font-black project-title mb-4 tracking-tighter">
                   {project.title}
                 </h3>
-                <div className="w-20 h-2 primary-accent-bg"></div>
+                <div className="w-20 h-1 md:h-2 primary-accent-bg"></div>
               </div>
-              <p className="text-lg md:text-xl description-text leading-relaxed font-light">
+              <p className="text-base md:text-xl description-text leading-relaxed font-light">
                 {project.description}
               </p>
               <div className="flex flex-wrap gap-2 pt-2">
@@ -100,12 +107,12 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
                   </span>
                 ))}
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 pt-8">
+              <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 pt-6">
                 <motion.a 
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   href={project.demoUrl} 
-                  className="button button-primary text-center !py-4 !rounded-none"
+                  className="button button-primary text-center !py-3 md:!py-4 !rounded-none"
                 >
                   {t('liveDemoButton')}
                 </motion.a>
@@ -113,7 +120,7 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   href={project.githubUrl} 
-                  className="button button-secondary text-center !py-4 !rounded-none"
+                  className="button button-secondary text-center !py-3 md:!py-4 !rounded-none"
                 >
                   {t('sourceCodeButton')}
                 </motion.a>
@@ -126,11 +133,10 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
   );
 }
 
-// --- Локализуем основной компонент страницы ---
+// Основной компонент страницы (без изменений)
 export default function PortfolioClient({ title, intro }: PortfolioClientProps) {
-  const t = useTranslations('portfolio'); // <-- Получаем переводы
+  const t = useTranslations('portfolio');
 
-  // Данные проектов (описания и заголовки лучше получать с бэкенда или из CMS, но для примера оставим здесь)
   const projects = [
     { id: 1, title: 'E-Commerce Platform', description: 'A full-featured online shopping platform with payment integration and real-time inventory tracking.', technologies: ['React', 'Node.js', 'Stripe'], image: '/path-to-your-image-1.jpg', demoUrl: '#', githubUrl: '#' },
     { id: 2, title: 'Task Management App', description: 'Collaborative task management tool with real-time updates, team workspaces, and detailed analytics.', technologies: ['Next.js', 'TypeScript', 'Socket.io'], image: '/path-to-your-image-2.jpg', demoUrl: '#', githubUrl: '#' },
@@ -141,26 +147,24 @@ export default function PortfolioClient({ title, intro }: PortfolioClientProps) 
     <div id="portfolio" className="relative">
       <InteractiveBackground />
 
-      {/* Вступительная секция */}
-      <div className="relative py-32 overflow-hidden">
+      <div className="relative py-24 md:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-6xl md:text-8xl font-black main-heading mb-6 tracking-tighter italic">
+            <h2 className="text-5xl md:text-8xl font-black main-heading mb-6 tracking-tighter italic">
               {title}
             </h2>
             <div className="w-32 h-2 primary-accent-bg mx-auto mb-10"></div>
-            <p className="text-xl md:text-2xl description-text portfolio-intro-text font-light max-w-3xl mx-auto">
+            <p className="text-lg md:text-2xl description-text portfolio-intro-text font-light max-w-3xl mx-auto">
               {intro}
             </p>
           </motion.div>
         </div>
       </div>
 
-      {/* Список проектов */}
       <div className="relative">
         {projects.map((project, index) => (
           <ProjectSection 
@@ -172,8 +176,7 @@ export default function PortfolioClient({ title, intro }: PortfolioClientProps) 
         ))}
       </div>
 
-      {/* Декоративный футер секции */}
-      <div className="relative py-20 text-center border-t border-[rgb(var(--border-color))] z-10">
+      <div className="relative py-20 text-center z-10">
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="inline-block"
