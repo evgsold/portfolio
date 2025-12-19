@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
-// --- Вспомогательный компонент для "глитч"-символов ---
+// --- Вспомогательные компоненты (без изменений) ---
 const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) => (
   <motion.span
     animate={{ opacity: [0, 1, 1, 0, 0, 1, 0] }}
@@ -15,44 +15,10 @@ const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) =>
   </motion.span>
 );
 
-// --- НОВЫЙ КОМПОНЕНТ ДЛЯ ОДНОЙ ЗВЕЗДЫ ---
-// Он инкапсулирует логику с хуком useTransform
-interface StarProps {
-  motionSourceX: MotionValue<number>;
-  motionSourceY: MotionValue<number>;
-  starData: {
-    id: number;
-    x: number;
-    y: number;
-    size: number;
-    depth: number;
-  };
-}
-
-const Star = ({ motionSourceX, motionSourceY, starData }: StarProps) => {
-  // Теперь useTransform вызывается на верхнем уровне компонента Star, что корректно
-  const x = useTransform(motionSourceX, v => v * starData.depth);
-  const y = useTransform(motionSourceY, v => v * starData.depth);
-
-  return (
-    <motion.div
-      className="absolute bg-[rgb(var(--primary))] !rounded-full"
-      style={{
-        width: starData.size,
-        height: starData.size,
-        top: `${starData.y}%`,
-        left: `${starData.x}%`,
-        x, // Используем трансформированные значения
-        y,
-      }}
-    />
-  );
-};
-
-
 // --- Основной компонент фона ---
 export default function InteractiveBackground() {
   const [isMobile, setIsMobile] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const checkDevice = () => setIsMobile(window.innerWidth < 768);
@@ -96,21 +62,69 @@ export default function InteractiveBackground() {
   const yFast = useTransform(scrollYProgress, [0, 1], [0, -800]);
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 90]);
 
-  const starCount = isMobile ? 50 : 150;
+  const starCount = isMobile ? 75 : 200; // Можно даже увеличить количество звезд!
   const stars = useMemo(() => {
-    return Array.from({ length: starCount }).map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
+    return Array.from({ length: starCount }).map(() => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
       size: Math.random() * (isMobile ? 1.2 : 1.5) + 0.5,
-      depth: Math.random() * 0.5 + 0.1,
+      depth: Math.random() * 0.6 + 0.2, // Глубина от 0.2 до 0.8
     }));
   }, [starCount, isMobile]);
 
-  // Логика для курсора (только десктоп)
+  // --- НОВИНКА: Логика отрисовки на Canvas ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Получаем текущий цвет из CSS переменной
+      ctx.fillStyle = `rgb(${getComputedStyle(document.documentElement).getPropertyValue('--primary')})`;
+
+      stars.forEach(star => {
+        const offsetX = motionSourceX.get() * star.depth;
+        const offsetY = motionSourceY.get() * star.depth;
+
+        // Рассчитываем позицию с учетом "зацикливания" по краям экрана
+        let x = (star.x + offsetX) % canvas.width;
+        let y = (star.y + offsetY) % canvas.height;
+        if (x < 0) x += canvas.width;
+        if (y < 0) y += canvas.height;
+
+        ctx.beginPath();
+        ctx.arc(x, y, star.size, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    render();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [stars, motionSourceX, motionSourceY]);
+
+
+  // Логика для курсора (без изменений)
   const cursorX = useSpring(-100, { stiffness: 300, damping: 30 });
   const cursorY = useSpring(-100, { stiffness: 300, damping: 30 });
-
   useEffect(() => {
     if (!isMobile) {
       const moveCursor = (e: MouseEvent) => {
@@ -128,42 +142,8 @@ export default function InteractiveBackground() {
            style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '60px 60px' }} 
       />
 
-      {/* "Звездное поле" теперь использует компонент Star */}
-      <div className="absolute inset-0">
-        {stars.map(star => (
-          <Star 
-            key={star.id}
-            motionSourceX={motionSourceX}
-            motionSourceY={motionSourceY}
-            starData={star}
-          />
-        ))}
-      </div>
-
-      {/* Элементы только для десктопа */}
-      {/* {!isMobile && (
-        <>
-          <motion.div 
-            style={{ x: useTransform(cursorX, v => v - 16), y: useTransform(cursorY, v => v - 16) }}
-            className="fixed top-0 left-0 w-8 h-8 border-2 border-[rgb(var(--primary))] z-[999] !rounded-none"
-          />
-          <svg className="absolute inset-0 w-full h-full opacity-20">
-            <motion.line
-              x1="0" y1="0"
-              x2={cursorX} y2={cursorY}
-              stroke="rgb(var(--primary))"
-              strokeWidth="1"
-            />
-          </svg>
-        </>
-      )} */}
-
-      {/* <div className="hidden lg:block">
-        <GlitchChar char="0xFA" top="5%" left="5%" duration={5} delay={0.5} />
-        <GlitchChar char="//_" bottom="10%" left="2%" duration={7} delay={1.2} />
-        <GlitchChar char="[SYS]" top="8%" right="4%" duration={6} delay={0.8} />
-        <GlitchChar char="C:/ >" bottom="8%" right="3%" duration={4} delay={0.2} />
-      </div> */}
+      {/* --- НОВИНКА: Canvas для "звездного поля" --- */}
+      <canvas ref={canvasRef} className="absolute inset-0" />
 
       <motion.div 
         style={{ x: useTransform(motionSourceX, v => v * 0.2), y: useTransform(motionSourceY, v => v * 0.2 + ySlow.get()) }}

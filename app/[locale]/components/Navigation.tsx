@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from '../contexts/ThemeContext';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
@@ -14,20 +14,16 @@ export default function Navigation({ locale }: { locale: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Прогресс скролла для тонкой линии под навбаром
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
-  // Следим за скроллом для эффекта стекла
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Блокировка скролла при открытом меню
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto';
   }, [isMenuOpen]);
@@ -51,17 +47,36 @@ export default function Navigation({ locale }: { locale: string }) {
     { name: t('contact'), path: '/contact' },
   ];
 
+  // --- ИСПРАВЛЕНИЕ: Убираем 'transition' из вариантов, оставляем только оркестровку ---
+  const menuVariants = {
+    closed: {
+      x: '100%',
+    },
+    open: {
+      x: 0,
+      // Оркестровка дочерних элементов остается здесь, это правильно
+      transition: {
+        staggerChildren: 0.07,
+        delayChildren: 0.2,
+      }
+    }
+  };
+
+  const linkVariants = {
+    closed: { x: 50, opacity: 0 },
+    open: { x: 0, opacity: 1 }
+  };
+
   return (
     <>
       <nav 
-        className={`glass-navbar fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-          isScrolled ? 'py-2' : 'py-4'
+        className={`glass-navbar fixed top-0 left-0 right-0 z-[100] ${
+          isScrolled ? 'scrolled' : ''
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             
-            {/* Логотип с бруталистским эффектом */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href={`/${locale}`} className="relative group flex items-center justify-center w-12 h-12 border-2 border-[rgb(var(--primary))] font-black text-xl">
                 <span className="relative z-10">SE</span>
@@ -69,7 +84,6 @@ export default function Navigation({ locale }: { locale: string }) {
               </Link>
             </motion.div>
 
-            {/* --- ДЕСКТОПНОЕ МЕНЮ --- */}
             <div className="hidden md:flex items-center space-x-1">
               {navLinks.map((link) => (
                 <Link 
@@ -84,6 +98,7 @@ export default function Navigation({ locale }: { locale: string }) {
                     <motion.div 
                       layoutId="nav-active"
                       className="absolute bottom-0 left-4 right-4 h-0.5 bg-[rgb(var(--primary))]"
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}
                 </Link>
@@ -91,7 +106,6 @@ export default function Navigation({ locale }: { locale: string }) {
               
               <div className="h-6 w-px bg-[rgb(var(--border-color))] mx-4" />
 
-              {/* Переключатели */}
               <div className="flex items-center gap-2">
                 <div className="flex border border-[rgb(var(--border-color))] p-1">
                   {['en', 'ru'].map((lang) => (
@@ -120,7 +134,6 @@ export default function Navigation({ locale }: { locale: string }) {
               </div>
             </div>
 
-            {/* --- МОБИЛЬНЫЙ ТРИГГЕР --- */}
             <div className="md:hidden flex items-center">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -128,52 +141,49 @@ export default function Navigation({ locale }: { locale: string }) {
               >
                 <motion.span 
                   animate={isMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                  className="w-6 h-0.5 primary-accent-bg block" 
+                  className="w-6 h-0.5 primary-accent-bg block will-change-transform" 
                 />
                 <motion.span 
                   animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                  className="w-6 h-0.5 primary-accent-bg block" 
+                  className="w-6 h-0.5 primary-accent-bg block will-change-opacity" 
                 />
                 <motion.span 
                   animate={isMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                  className="w-6 h-0.5 primary-accent-bg block" 
+                  className="w-6 h-0.5 primary-accent-bg block will-change-transform" 
                 />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Линия прогресса скролла */}
         <motion.div 
-          className="absolute bottom-0 left-0 right-0 h-[2px] bg-[rgb(var(--primary))] origin-left"
+          className="absolute bottom-0 left-0 right-0 h-[2px] bg-[rgb(var(--primary))] origin-left will-change-transform"
           style={{ scaleX }}
         />
       </nav>
 
-      {/* --- МОБИЛЬНОЕ МЕНЮ (FULLSCREEN BRUTALISM) --- */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            variants={menuVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            // --- ИСПРАВЛЕНИЕ: Добавляем 'transition' как отдельный пропс сюда ---
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[105] bg-[rgb(var(--card-bg))] flex flex-col"
-            onClick={() => {setIsMenuOpen(false)}}
+            className="fixed inset-0 z-[105] bg-[rgb(var(--card-bg))] flex flex-col will-change-transform"
+            onClick={() => setIsMenuOpen(false)}
           >
-            {/* Фоновая сетка в меню */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                  style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
             />
 
             <div className="relative flex-1 flex flex-col justify-center px-8">
               <div className="space-y-8">
-                {navLinks.map((link, idx) => (
+                {navLinks.map((link) => (
                   <motion.div
                     key={link.path}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * idx }}
+                    variants={linkVariants}
                   >
                     <Link 
                       href={`/${locale}${link.path}`}
