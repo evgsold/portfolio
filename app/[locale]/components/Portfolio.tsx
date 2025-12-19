@@ -139,9 +139,9 @@ export default function PortfolioClient({ title, intro }: PortfolioClientProps) 
   const t = useTranslations('portfolio');
 
   const projects = [
-    { id: 1, title: 'E-Commerce Platform', description: 'A full-featured online shopping platform with payment integration and real-time inventory tracking.', technologies: ['React', 'Node.js', 'Stripe'], image: '/path-to-your-image-1.jpg', demoUrl: '#', githubUrl: '#' },
-    { id: 2, title: 'Task Management App', description: 'Collaborative task management tool with real-time updates, team workspaces, and detailed analytics.', technologies: ['Next.js', 'TypeScript', 'Socket.io'], image: '/path-to-your-image-2.jpg', demoUrl: '#', githubUrl: '#' },
-    { id: 3, title: 'Weather Dashboard', description: 'Beautiful weather application with interactive maps, historical data, and 7-day forecasts.', technologies: ['React', 'API', 'Chart.js'], image: '/path-to-your-image-3.jpg', demoUrl: '#', githubUrl: '#' },
+    { id: 1, title: 'E-Commerce Platform', description: 'A full-featured online shopping platform with payment integration and real-time inventory tracking.', technologies: ['React', 'Node.js', 'Stripe'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
+    { id: 2, title: 'Task Management App', description: 'Collaborative task management tool with real-time updates, team workspaces, and detailed analytics.', technologies: ['Next.js', 'TypeScript', 'Socket.io'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
+    { id: 3, title: 'Weather Dashboard', description: 'Beautiful weather application with interactive maps, historical data, and 7-day forecasts.', technologies: ['React', 'API', 'Chart.js'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
   ];
 
   return (

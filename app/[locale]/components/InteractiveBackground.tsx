@@ -1,32 +1,34 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import Portal from './Portal'; // <-- 1. ИМПОРТИРУЕМ ПОРТАЛ
-
-// --- Вспомогательные компоненты (без изменений) ---
-const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) => (
-  <motion.span
-    animate={{ opacity: [0, 1, 1, 0, 0, 1, 0] }}
-    transition={{ duration, repeat: Infinity, delay, ease: 'linear' }}
-    className="fixed font-mono text-lg text-[rgb(var(--primary))] opacity-0 pointer-events-none"
-    style={{ top, left, right, bottom }}
-  >
-    {char}
-  </motion.span>
-);
+import { motion, useScroll, useTransform, useSpring, MotionValue, number } from 'framer-motion';
+import Portal from './Portal';
 
 // --- Основной компонент фона ---
 export default function InteractiveBackground() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [requiresPermission, setRequiresPermission] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const checkDevice = () => setIsMobile(window.innerWidth < 768);
+    const checkDevice = () => {
+      const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      setIsTouchDevice(touch);
+      setIsSmallScreen(window.innerWidth < 768);
+
+      if (touch && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        setRequiresPermission(true);
+      }
+    };
+
     checkDevice();
-    window.addEventListener('resize', checkDevice);
-    return () => window.removeEventListener('resize', checkDevice);
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const { scrollYProgress } = useScroll();
@@ -38,7 +40,7 @@ export default function InteractiveBackground() {
   const tiltY = useSpring(0, springConfig);
 
   const requestOrientationPermission = async () => {
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+    if (requiresPermission) {
       try {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission();
         if (permissionState === 'granted') {
@@ -47,49 +49,60 @@ export default function InteractiveBackground() {
       } catch (error) {
         console.error("Error requesting device orientation permission:", error);
       }
-    } else {
-      setPermissionGranted(true);
     }
   };
 
   useEffect(() => {
-    if (!isMobile) {
+    if (isTouchDevice) {
+      if (permissionGranted || !requiresPermission) {
+        const handleOrientation = (event: DeviceOrientationEvent) => {
+          const gamma = event.gamma || 0;
+          const beta = event.beta || 0;
+          tiltX.set(Math.max(-20, Math.min(20, gamma)) * 5);
+          tiltY.set(Math.max(-20, Math.min(20, beta)) * 5);
+        };
+        window.addEventListener('deviceorientation', handleOrientation);
+        return () => window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    } else {
       const handleMouseMove = (e: MouseEvent) => {
         mouseX.set(e.clientX - window.innerWidth / 2);
         mouseY.set(e.clientY - window.innerHeight / 2);
       };
       window.addEventListener('mousemove', handleMouseMove);
       return () => window.removeEventListener('mousemove', handleMouseMove);
-    } 
-    else if (isMobile && permissionGranted) {
-      const handleOrientation = (event: DeviceOrientationEvent) => {
-        const gamma = event.gamma || 0;
-        const beta = event.beta || 0;
-        tiltX.set(Math.max(-20, Math.min(20, gamma)) * 5);
-        tiltY.set(Math.max(-20, Math.min(20, beta)) * 5);
-      };
-      window.addEventListener('deviceorientation', handleOrientation);
-      return () => window.removeEventListener('deviceorientation', handleOrientation);
     }
-  }, [isMobile, permissionGranted, mouseX, mouseY, tiltX, tiltY]);
+  }, [isTouchDevice, permissionGranted, requiresPermission, mouseX, mouseY, tiltX, tiltY]);
 
-  const motionSourceX = isMobile ? tiltX : mouseX;
-  const motionSourceY = isMobile ? tiltY : mouseY;
+  const motionSourceX = isTouchDevice ? tiltX : mouseX;
+  const motionSourceY = isTouchDevice ? tiltY : mouseY;
 
+  // --- ИСПРАВЛЕНИЕ: Все хуки useTransform вынесены на верхний уровень ---
   const ySlow = useTransform(scrollYProgress, [0, 1], [0, -200]);
   const yFast = useTransform(scrollYProgress, [0, 1], [0, -800]);
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 90]);
 
-  const starCount = isMobile ? 75 : 200;
+  // Трансформации для декоративных элементов
+  const shapeX = useTransform(motionSourceX, v => v * -0.1);
+  const blur1X = useTransform(motionSourceX, v => v * 0.2);
+  const blur2X = useTransform(motionSourceX, v => v * -0.15);
+  
+  // Комбинируем MotionValue для более чистого кода
+  // @ts-ignore
+  const blur1Y = useTransform([motionSourceY, ySlow], ([y, slowY]) => y * 0.2 + slowY);
+  // @ts-ignore
+  const blur2Y = useTransform([motionSourceY, ySlow], ([y, slowY]) => y * -0.15 + slowY);
+
+  const starCount = isSmallScreen ? 75 : 200;
   const stars = useMemo(() => {
     if (typeof window === 'undefined') return [];
     return Array.from({ length: starCount }).map(() => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      size: Math.random() * (isMobile ? 1.2 : 1.5) + 0.5,
+      size: Math.random() * (isSmallScreen ? 1.2 : 1.5) + 0.5,
       depth: Math.random() * 0.6 + 0.2,
     }));
-  }, [starCount, isMobile]);
+  }, [starCount, isSmallScreen]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -104,6 +117,7 @@ export default function InteractiveBackground() {
     };
 
     const render = () => {
+      if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = `rgb(${getComputedStyle(document.documentElement).getPropertyValue('--primary')})`;
       stars.forEach(star => {
@@ -135,7 +149,7 @@ export default function InteractiveBackground() {
   const cursorX = useSpring(-100, { stiffness: 300, damping: 30 });
   const cursorY = useSpring(-100, { stiffness: 300, damping: 30 });
   useEffect(() => {
-    if (!isMobile) {
+    if (!isTouchDevice) {
       const moveCursor = (e: MouseEvent) => {
         cursorX.set(e.clientX);
         cursorY.set(e.clientY);
@@ -143,20 +157,18 @@ export default function InteractiveBackground() {
       window.addEventListener('mousemove', moveCursor);
       return () => window.removeEventListener('mousemove', moveCursor);
     }
-  }, [isMobile, cursorX, cursorY]);
+  }, [isTouchDevice, cursorX, cursorY]);
 
   return (
     <>
-      {/* --- 2. ОБЕРАЧИВАЕМ КНОПКУ В ПОРТАЛ --- */}
       <Portal>
-        {isMobile && !permissionGranted && (
+        {isTouchDevice && requiresPermission && !permissionGranted && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ delay: 1 }}
             onClick={requestOrientationPermission}
-            // Устанавливаем очень высокий z-index, чтобы быть поверх всего
             className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 
                        bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] 
                        text-xs font-bold uppercase tracking-widest text-[rgb(var(--foreground))] 
@@ -174,28 +186,35 @@ export default function InteractiveBackground() {
 
         <canvas ref={canvasRef} className="absolute inset-0" />
 
+        {!isSmallScreen && (
+          <>
+            {/* ИСПОЛЬЗУЕМ РАНЕЕ СОЗДАННЫЕ ПЕРЕМЕННЫЕ */}
+            <motion.div
+              style={{ y: yFast, x: shapeX, rotate }}
+              className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block will-change-transform"
+            >
+              <div className="relative w-56 h-56">
+                <div className="absolute w-full h-full border-2 border-[rgb(var(--primary))] !rounded-none" />
+                <motion.div 
+                  animate={{ rotate: -45 }}
+                  className="absolute top-4 left-4 w-24 h-24 border border-[rgb(var(--primary))] !rounded-none" 
+                />
+                <div className="absolute bottom-0 right-0 w-px h-24 bg-[rgb(var(--primary))]" />
+                <div className="absolute top-0 left-0 w-24 h-px bg-[rgb(var(--primary))]" />
+              </div>
+            </motion.div>
+          </>
+        )}
+
+        {/* ИСПОЛЬЗУЕМ РАНЕЕ СОЗДАННЫЕ ПЕРЕМЕННЫЕ */}
         <motion.div 
-          style={{ x: useTransform(motionSourceX, v => v * 0.2), y: useTransform(motionSourceY, v => v * 0.2 + ySlow.get()) }}
+          style={{ x: blur1X, y: blur1Y }}
           className="fixed top-1/4 left-1/4 w-96 h-96 bg-[rgb(var(--primary-rgb),0.05)] blur-[120px] !rounded-full will-change-transform"
         />
         <motion.div 
-          style={{ x: useTransform(motionSourceX, v => v * -0.15), y: useTransform(motionSourceY, v => v * -0.15 + ySlow.get()) }}
+          style={{ x: blur2X, y: blur2Y }}
           className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-[rgb(var(--primary-accent-rgb),0.05)] blur-[100px] !rounded-full will-change-transform"
         />
-        <motion.div
-          style={{ y: yFast, x: useTransform(motionSourceX, v => v * -0.1), rotate }}
-          className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block will-change-transform"
-        >
-          <div className="relative w-56 h-56">
-            <div className="absolute w-full h-full border-2 border-[rgb(var(--primary))] !rounded-none" />
-            <motion.div 
-              animate={{ rotate: -45 }}
-              className="absolute top-4 left-4 w-24 h-24 border border-[rgb(var(--primary))] !rounded-none" 
-            />
-            <div className="absolute bottom-0 right-0 w-px h-24 bg-[rgb(var(--primary))]" />
-            <div className="absolute top-0 left-0 w-24 h-px bg-[rgb(var(--primary))]" />
-          </div>
-        </motion.div>
       </div>
     </>
   );
