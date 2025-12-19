@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
 
 // --- Вспомогательные компоненты (без изменений) ---
 const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) => (
@@ -62,17 +62,18 @@ export default function InteractiveBackground() {
   const yFast = useTransform(scrollYProgress, [0, 1], [0, -800]);
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 90]);
 
-  const starCount = isMobile ? 75 : 200; // Можно даже увеличить количество звезд!
+  const starCount = isMobile ? 75 : 200;
   const stars = useMemo(() => {
+    if (typeof window === 'undefined') return [];
     return Array.from({ length: starCount }).map(() => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       size: Math.random() * (isMobile ? 1.2 : 1.5) + 0.5,
-      depth: Math.random() * 0.6 + 0.2, // Глубина от 0.2 до 0.8
+      depth: Math.random() * 0.6 + 0.2,
     }));
   }, [starCount, isMobile]);
 
-  // --- НОВИНКА: Логика отрисовки на Canvas ---
+  // --- ОПТИМИЗАЦИЯ: Логика отрисовки на Canvas по событию ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -80,24 +81,21 @@ export default function InteractiveBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationFrameId: number;
-
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // Перерисовываем один раз при изменении размера окна
+      render(); 
     };
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Получаем текущий цвет из CSS переменной
       ctx.fillStyle = `rgb(${getComputedStyle(document.documentElement).getPropertyValue('--primary')})`;
 
       stars.forEach(star => {
         const offsetX = motionSourceX.get() * star.depth;
         const offsetY = motionSourceY.get() * star.depth;
 
-        // Рассчитываем позицию с учетом "зацикливания" по краям экрана
         let x = (star.x + offsetX) % canvas.width;
         let y = (star.y + offsetY) % canvas.height;
         if (x < 0) x += canvas.width;
@@ -107,22 +105,25 @@ export default function InteractiveBackground() {
         ctx.arc(x, y, star.size, 0, 2 * Math.PI);
         ctx.fill();
       });
-
-      animationFrameId = requestAnimationFrame(render);
     };
 
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    render();
+    // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+    // Подписываемся на изменения MotionValue и вызываем render
+    const unsubscribeX = motionSourceX.on("change", render);
+    const unsubscribeY = motionSourceY.on("change", render);
 
+    resizeCanvas(); // Первоначальная отрисовка
+    window.addEventListener('resize', resizeCanvas);
+
+    // Отписываемся от событий при размонтировании компонента
     return () => {
+      unsubscribeX();
+      unsubscribeY();
       window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(animationFrameId);
     };
   }, [stars, motionSourceX, motionSourceY]);
 
 
-  // Логика для курсора (без изменений)
   const cursorX = useSpring(-100, { stiffness: 300, damping: 30 });
   const cursorY = useSpring(-100, { stiffness: 300, damping: 30 });
   useEffect(() => {
@@ -142,20 +143,19 @@ export default function InteractiveBackground() {
            style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '60px 60px' }} 
       />
 
-      {/* --- НОВИНКА: Canvas для "звездного поля" --- */}
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       <motion.div 
         style={{ x: useTransform(motionSourceX, v => v * 0.2), y: useTransform(motionSourceY, v => v * 0.2 + ySlow.get()) }}
-        className="fixed top-1/4 left-1/4 w-96 h-96 bg-[rgb(var(--primary-rgb),0.05)] blur-[120px] !rounded-full"
+        className="fixed top-1/4 left-1/4 w-96 h-96 bg-[rgb(var(--primary-rgb),0.05)] blur-[120px] !rounded-full will-change-transform"
       />
       <motion.div 
         style={{ x: useTransform(motionSourceX, v => v * -0.15), y: useTransform(motionSourceY, v => v * -0.15 + ySlow.get()) }}
-        className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-[rgb(var(--primary-accent-rgb),0.05)] blur-[100px] !rounded-full"
+        className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-[rgb(var(--primary-accent-rgb),0.05)] blur-[100px] !rounded-full will-change-transform"
       />
       <motion.div
         style={{ y: yFast, x: useTransform(motionSourceX, v => v * -0.1), rotate }}
-        className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block"
+        className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block will-change-transform"
       >
         <div className="relative w-56 h-56">
           <div className="absolute w-full h-full border-2 border-[rgb(var(--primary))] !rounded-none" />

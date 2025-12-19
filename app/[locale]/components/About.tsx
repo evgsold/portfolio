@@ -24,7 +24,6 @@ export default function AboutClient({
     'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Git'
   ];
 
-  // Варианты для родительского контейнера (без изменений, здесь все правильно)
   const toolboxContainerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -35,13 +34,11 @@ export default function AboutClient({
     },
   };
 
-  // --- ИСПРАВЛЕНИЕ: Убираем 'transition' из варианта 'visible' ---
   const skillCardVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      // transition: { ... } <-- ЭТА ЧАСТЬ БЫЛА УДАЛЕНА ОТСЮДА
     },
   };
 
@@ -58,8 +55,10 @@ export default function AboutClient({
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }} // Можно немного ускорить
           viewport={{ once: true, amount: 0.5 }}
-          className="text-center mb-20"
+          // --- ОПТИМИЗАЦИЯ: Добавляем will-change ---
+          className="text-center mb-20 will-change-transform"
         >
           <h2 className="text-5xl md:text-6xl font-black main-heading mb-6 tracking-tighter">
             {title}
@@ -67,7 +66,7 @@ export default function AboutClient({
           <motion.div 
             initial={{ width: "0%" }}
             whileInView={{ width: "100%" }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
             className="h-1.5 primary-accent-bg mx-auto max-w-[120px]"
           />
@@ -79,15 +78,19 @@ export default function AboutClient({
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
               whileInView={{ opacity: 0.3, scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 100 }}
-              viewport={{ once: true }}
-              className="absolute -inset-4 border-2 border-[rgb(var(--primary))] z-0 !rounded-none"
+              // --- ОПТИМИЗАЦИЯ: Улучшаем пружинную анимацию ---
+              transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+              viewport={{ once: true, amount: 0.5 }}
+              // --- ОПТИМИЗАЦИЯ: Добавляем will-change ---
+              className="absolute -inset-4 border-2 border-[rgb(var(--primary))] z-0 !rounded-none will-change-transform"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="about-image-container !m-0 relative z-10 !rounded-none"
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true, amount: 0.5 }}
+              // --- ОПТИМИЗАЦИЯ: Добавляем will-change ---
+              className="about-image-container !m-0 relative z-10 !rounded-none will-change-transform"
             >
               <Image
                 src="/me.jpg" 
@@ -101,8 +104,8 @@ export default function AboutClient({
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            viewport={{ once: true, amount: 0.8 }} // Текст должен быть почти полностью видим для анимации
             className="text-center"
           >
             <p className="text-xl md:text-2xl description-text leading-relaxed font-light italic">
@@ -117,14 +120,15 @@ export default function AboutClient({
           <div className="grid grid-cols-2 gap-8 max-w-2xl mx-auto">
             <motion.div 
               whileHover={{ y: -5 }}
-              className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none"
+              // --- ОПТИМИЗАЦИЯ: Добавляем will-change для плавной анимации при наведении ---
+              className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none will-change-transform"
             >
               <div className="stats-number">3+</div>
               <div className="stats-label uppercase tracking-widest text-xs mt-2">{experience_label}</div>
             </motion.div>
             <motion.div 
               whileHover={{ y: -5 }}
-              className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none"
+              className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none will-change-transform"
             >
               <div className="stats-number">20+</div>
               <div className="stats-label uppercase tracking-widest text-xs mt-2">{projects_label}</div>
@@ -147,14 +151,15 @@ export default function AboutClient({
               <motion.div 
                 key={skill}
                 variants={skillCardVariants}
-                // --- ИСПРАВЛЕНИЕ: Добавляем 'transition' как отдельный пропс сюда ---
-                transition={{ type: 'spring', stiffness: 100 }}
+                // --- ОПТИМИЗАЦИЯ: Улучшаем пружинную анимацию ---
+                transition={{ type: 'spring', stiffness: 100, damping: 15 }}
                 whileHover={{ 
                   backgroundColor: "rgb(var(--primary))", 
                   color: "#fff",
                   y: -5
                 }}
-                className="skill-card cursor-default !rounded-none"
+                // --- ОПТИМИЗАЦИЯ: Добавляем will-change ---
+                className="skill-card cursor-default !rounded-none will-change-transform"
               >
                 {skill}
               </motion.div>

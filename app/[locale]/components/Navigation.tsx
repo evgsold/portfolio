@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from '../contexts/ThemeContext';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll } from 'framer-motion'; // <-- Убрали useSpring
 
 export default function Navigation({ locale }: { locale: string }) {
   const t = useTranslations('navigation');
@@ -15,8 +15,9 @@ export default function Navigation({ locale }: { locale: string }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
+  // --- ОПТИМИЗАЗАЦИЯ: Убираем useSpring, используем scrollYProgress напрямую ---
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  // const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 }); // <-- Эта строка больше не нужна
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -47,14 +48,10 @@ export default function Navigation({ locale }: { locale: string }) {
     { name: t('contact'), path: '/contact' },
   ];
 
-  // --- ИСПРАВЛЕНИЕ: Убираем 'transition' из вариантов, оставляем только оркестровку ---
   const menuVariants = {
-    closed: {
-      x: '100%',
-    },
+    closed: { x: '100%' },
     open: {
       x: 0,
-      // Оркестровка дочерних элементов остается здесь, это правильно
       transition: {
         staggerChildren: 0.07,
         delayChildren: 0.2,
@@ -156,9 +153,14 @@ export default function Navigation({ locale }: { locale: string }) {
           </div>
         </div>
 
+        {/* --- ОПТИМИЗАЦИЯ: Прямое использование scrollYProgress и добавление тени --- */}
         <motion.div 
-          className="absolute bottom-0 left-0 right-0 h-[2px] bg-[rgb(var(--primary))] origin-left will-change-transform"
-          style={{ scaleX }}
+          className="absolute bottom-0 left-0 right-0 h-[3px] bg-[rgb(var(--primary))] origin-left will-change-transform"
+          style={{ 
+            scaleX: scrollYProgress,
+            // Добавляем легкую тень для объема, которая будет видна только когда линия активна
+            boxShadow: "0 2px 10px rgba(var(--primary-rgb), 0.5)"
+          }}
         />
       </nav>
 
@@ -169,7 +171,6 @@ export default function Navigation({ locale }: { locale: string }) {
             initial="closed"
             animate="open"
             exit="closed"
-            // --- ИСПРАВЛЕНИЕ: Добавляем 'transition' как отдельный пропс сюда ---
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[105] bg-[rgb(var(--card-bg))] flex flex-col will-change-transform"
             onClick={() => setIsMenuOpen(false)}
