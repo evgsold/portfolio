@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import Portal from './Portal'; // <-- 1. ИМПОРТИРУЕМ ПОРТАЛ
 
 // --- Вспомогательные компоненты (без изменений) ---
 const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) => (
@@ -36,9 +37,7 @@ export default function InteractiveBackground() {
   const tiltX = useSpring(0, springConfig);
   const tiltY = useSpring(0, springConfig);
 
-  // --- НОВИНКА: Функция для запроса разрешений на iOS ---
   const requestOrientationPermission = async () => {
-    // Проверяем, существует ли функция (только на iOS 13+)
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission();
@@ -49,7 +48,6 @@ export default function InteractiveBackground() {
         console.error("Error requesting device orientation permission:", error);
       }
     } else {
-      // Для Android и старых iOS, где разрешение не требуется
       setPermissionGranted(true);
     }
   };
@@ -63,7 +61,6 @@ export default function InteractiveBackground() {
       window.addEventListener('mousemove', handleMouseMove);
       return () => window.removeEventListener('mousemove', handleMouseMove);
     } 
-    // --- ИЗМЕНЕНИЕ: Добавляем обработчик только ПОСЛЕ получения разрешения ---
     else if (isMobile && permissionGranted) {
       const handleOrientation = (event: DeviceOrientationEvent) => {
         const gamma = event.gamma || 0;
@@ -149,52 +146,57 @@ export default function InteractiveBackground() {
   }, [isMobile, cursorX, cursorY]);
 
   return (
-    <div className="fixed inset-0 z-[-1] pointer-events-none">
-      {/* --- НОВИНКА: Кнопка для запроса разрешений на мобильных --- */}
-      {isMobile && !permissionGranted && (
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          onClick={requestOrientationPermission}
-          // Стилизуем кнопку, чтобы она была заметной, но не навязчивой
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 
-                     bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] 
-                     text-xs font-bold uppercase tracking-widest text-[rgb(var(--foreground))] 
-                     pointer-events-auto !rounded-none"
+    <>
+      {/* --- 2. ОБЕРАЧИВАЕМ КНОПКУ В ПОРТАЛ --- */}
+      <Portal>
+        {isMobile && !permissionGranted && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ delay: 1 }}
+            onClick={requestOrientationPermission}
+            // Устанавливаем очень высокий z-index, чтобы быть поверх всего
+            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 
+                       bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] 
+                       text-xs font-bold uppercase tracking-widest text-[rgb(var(--foreground))] 
+                       !rounded-none shadow-2xl"
+          >
+            Enable Motion
+          </motion.button>
+        )}
+      </Portal>
+
+      <div className="fixed inset-0 z-[-1] pointer-events-none">
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
+             style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '60px 60px' }} 
+        />
+
+        <canvas ref={canvasRef} className="absolute inset-0" />
+
+        <motion.div 
+          style={{ x: useTransform(motionSourceX, v => v * 0.2), y: useTransform(motionSourceY, v => v * 0.2 + ySlow.get()) }}
+          className="fixed top-1/4 left-1/4 w-96 h-96 bg-[rgb(var(--primary-rgb),0.05)] blur-[120px] !rounded-full will-change-transform"
+        />
+        <motion.div 
+          style={{ x: useTransform(motionSourceX, v => v * -0.15), y: useTransform(motionSourceY, v => v * -0.15 + ySlow.get()) }}
+          className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-[rgb(var(--primary-accent-rgb),0.05)] blur-[100px] !rounded-full will-change-transform"
+        />
+        <motion.div
+          style={{ y: yFast, x: useTransform(motionSourceX, v => v * -0.1), rotate }}
+          className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block will-change-transform"
         >
-          Enable Motion
-        </motion.button>
-      )}
-
-      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
-           style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '60px 60px' }} 
-      />
-
-      <canvas ref={canvasRef} className="absolute inset-0" />
-
-      <motion.div 
-        style={{ x: useTransform(motionSourceX, v => v * 0.2), y: useTransform(motionSourceY, v => v * 0.2 + ySlow.get()) }}
-        className="fixed top-1/4 left-1/4 w-96 h-96 bg-[rgb(var(--primary-rgb),0.05)] blur-[120px] !rounded-full will-change-transform"
-      />
-      <motion.div 
-        style={{ x: useTransform(motionSourceX, v => v * -0.15), y: useTransform(motionSourceY, v => v * -0.15 + ySlow.get()) }}
-        className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-[rgb(var(--primary-accent-rgb),0.05)] blur-[100px] !rounded-full will-change-transform"
-      />
-      <motion.div
-        style={{ y: yFast, x: useTransform(motionSourceX, v => v * -0.1), rotate }}
-        className="fixed top-[15%] right-[8%] opacity-20 hidden lg:block will-change-transform"
-      >
-        <div className="relative w-56 h-56">
-          <div className="absolute w-full h-full border-2 border-[rgb(var(--primary))] !rounded-none" />
-          <motion.div 
-            animate={{ rotate: -45 }}
-            className="absolute top-4 left-4 w-24 h-24 border border-[rgb(var(--primary))] !rounded-none" 
-          />
-          <div className="absolute bottom-0 right-0 w-px h-24 bg-[rgb(var(--primary))]" />
-          <div className="absolute top-0 left-0 w-24 h-px bg-[rgb(var(--primary))]" />
-        </div>
-      </motion.div>
-    </div>
+          <div className="relative w-56 h-56">
+            <div className="absolute w-full h-full border-2 border-[rgb(var(--primary))] !rounded-none" />
+            <motion.div 
+              animate={{ rotate: -45 }}
+              className="absolute top-4 left-4 w-24 h-24 border border-[rgb(var(--primary))] !rounded-none" 
+            />
+            <div className="absolute bottom-0 right-0 w-px h-24 bg-[rgb(var(--primary))]" />
+            <div className="absolute top-0 left-0 w-24 h-px bg-[rgb(var(--primary))]" />
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
