@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import InteractiveBackground from '../components/InteractiveBackground'; // <-- 1. ИМПОРТИРУЕМ КОМПОНЕНТ
+import InteractiveBackground from '../components/InteractiveBackground';
 
 interface AboutClientProps {
   title: string;
@@ -19,25 +19,39 @@ export default function AboutClient({
   experience_label, projects_label, toolbox_title 
 }: AboutClientProps) {
   
-  // 2. УДАЛЯЕМ ВСЕ ХУКИ (useRef, useScroll, useTransform, useSpring, useEffect)
-  // Они больше не нужны, так как InteractiveBackground управляет этим глобально.
-
   const skills = [
     'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 
     'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Git'
   ];
+
+  // Варианты для родительского контейнера (без изменений, здесь все правильно)
+  const toolboxContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.07,
+      },
+    },
+  };
+
+  // --- ИСПРАВЛЕНИЕ: Убираем 'transition' из варианта 'visible' ---
+  const skillCardVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      // transition: { ... } <-- ЭТА ЧАСТЬ БЫЛА УДАЛЕНА ОТСЮДА
+    },
+  };
 
   return (
     <section 
       id="about" 
       className="relative py-32 overflow-hidden"
     >
-      {/* --- ИНТЕРАКТИВНЫЙ ФОН --- */}
       <InteractiveBackground />
 
-      {/* 3. УДАЛЯЕМ СТАРЫЕ ФОНОВЫЕ ЭЛЕМЕНТЫ (сетка, пятно, линия, карточка с кодом) */}
-
-      {/* --- КОНТЕНТ (добавляем z-10, чтобы он был над фоном) --- */}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         
         {/* Заголовок */}
@@ -59,11 +73,9 @@ export default function AboutClient({
           />
         </motion.div>
 
+        {/* Изображение и Описание */}
         <div className="grid grid-cols-1 md:grid-cols-1 gap-16 items-center">
-          
-          {/* Изображение с "бруталистской" подложкой */}
           <div className="relative mx-auto">
-            {/* 4. АДАПТИРУЕМ АНИМАЦИЮ РАМКИ */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
               whileInView={{ opacity: 0.3, scale: 1, rotate: 0 }}
@@ -86,8 +98,6 @@ export default function AboutClient({
               />
             </motion.div>
           </div>
-
-          {/* Описание */}
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -125,24 +135,31 @@ export default function AboutClient({
         {/* Инструментарий */}
         <div className="mt-24">
           <h3 className="section-subheading mb-12">{toolbox_title}</h3>
-          <div className="flex flex-wrap gap-4 justify-center">
-            {skills.map((skill, idx) => (
-              <motion.span 
+          
+          <motion.div 
+            className="flex flex-wrap gap-4 justify-center"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.5 }}
+            variants={toolboxContainerVariants}
+          >
+            {skills.map((skill) => (
+              <motion.div 
                 key={skill}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
+                variants={skillCardVariants}
+                // --- ИСПРАВЛЕНИЕ: Добавляем 'transition' как отдельный пропс сюда ---
+                transition={{ type: 'spring', stiffness: 100 }}
                 whileHover={{ 
                   backgroundColor: "rgb(var(--primary))", 
                   color: "#fff",
-                  scale: 1.05
+                  y: -5
                 }}
                 className="skill-card cursor-default !rounded-none"
               >
                 {skill}
-              </motion.span>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
       </div>

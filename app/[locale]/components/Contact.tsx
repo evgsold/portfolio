@@ -44,54 +44,40 @@ export default function ContactClient({
     setTimeout(() => setSubmitted(false), 5000);
   };
 
-  // --- ОБНОВЛЕНИЕ: Создаем массив с данными для социальных сетей ---
   const socialLinks = [
-    { 
-      name: 'Github', 
-      url: 'https://github.com/evgsold' // <-- ЗАМЕНИТЕ НА ВАШ USERNAME
-    },
-    { 
-      name: 'LinkedIn', 
-      url: 'https://linkedin.com/in/евгений-солдатенко-365301334' // <-- ЗАМЕНИТЕ НА ВАШ USERNAME
-    },
-    { 
-      name: 'Instagram', 
-      url: 'https://www.instagram.com/evg_sold/' // <-- ЗАМЕНИТЕ НА ВАШ USERNAME
-    }
-    ,
-    { 
-      name: 'Telegram', 
-      url: 'https://t.me/evg_sold' // <-- ЗАМЕНИТЕ НА ВАШ USERNAME
-    }
+    { name: 'Github', url: 'https://github.com/evgsold' },
+    { name: 'LinkedIn', url: 'https://linkedin.com/in/евгений-солдатенко-365301334' },
+    { name: 'Instagram', url: 'https://www.instagram.com/evg_sold/' },
+    { name: 'Telegram', url: 'https://t.me/evg_sold' }
   ];
 
   return (
     <section 
       id="contact" 
-      className="relative overflow-hidden min-h-screen flex flex-col justify-center"
+      className="relative overflow-hidden min-h-screen flex flex-col justify-center py-20 md:py-0"
     >
       <InteractiveBackground />
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 z-10 w-full">
         
         {/* Заголовок */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-5xl md:text-7xl font-black main-heading mb-6 tracking-tighter italic">
+          <h2 className="text-4xl md:text-7xl font-black main-heading mb-6 tracking-tighter italic">
             {title}
           </h2>
           <div className="w-24 h-2 primary-accent-bg mx-auto mb-8"></div>
-          <p className="text-xl description-text max-w-2xl mx-auto font-light">
+          <p className="text-lg md:text-xl description-text max-w-2xl mx-auto font-light">
             {intro}
           </p>
         </motion.div>
 
         {/* Форма и Успех */}
-        <div className="relative mb-24">
+        <div className="relative mb-16 md:mb-24">
           <AnimatePresence mode="wait">
             {submitted ? (
               <motion.div 
@@ -99,7 +85,7 @@ export default function ContactClient({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
-                className="success-message !rounded-none border-2 border-[rgb(var(--primary))] p-12 text-center bg-[rgb(var(--card-bg))]"
+                className="success-message !rounded-none border-2 border-[rgb(var(--primary))] p-8 md:p-12 text-center bg-[rgb(var(--card-bg))]"
               >
                 <motion.div 
                   initial={{ scale: 0 }}
@@ -108,8 +94,8 @@ export default function ContactClient({
                 >
                   ✓
                 </motion.div>
-                <h3 className="text-2xl font-bold success-message-title mb-4">{success_title}</h3>
-                <p className="success-message-text text-lg">{success_text}</p>
+                <h3 className="text-xl md:text-2xl font-bold success-message-title mb-4">{success_title}</h3>
+                <p className="success-message-text text-base md:text-lg">{success_text}</p>
               </motion.div>
             ) : (
               <motion.div
@@ -117,12 +103,12 @@ export default function ContactClient({
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                className="bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] p-8 md:p-12 shadow-2xl relative !rounded-none"
+                className="bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] p-6 md:p-12 shadow-2xl relative !rounded-none"
               >
                 <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-[rgb(var(--primary))]" />
                 
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="name" className="form-label uppercase tracking-widest text-xs font-bold">{name_label}</label>
                       <input 
@@ -153,7 +139,7 @@ export default function ContactClient({
                     whileTap={{ scale: 0.98 }}
                     type="submit" 
                     disabled={isSubmitting} 
-                    className="button button-primary w-full !rounded-none !py-5 text-lg uppercase tracking-widest font-black disabled:opacity-50"
+                    className="button button-primary w-full !rounded-none !py-4 md:!py-5 text-base md:text-lg uppercase tracking-widest font-black disabled:opacity-50"
                   >
                     {isSubmitting ? sending_button : send_button}
                   </motion.button>
@@ -164,7 +150,7 @@ export default function ContactClient({
         </div>
 
         {/* Прямые контакты */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-[rgb(var(--border-color))] pt-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 border-t border-[rgb(var(--border-color))] pt-12 md:pt-16">
           {[
             { label: email, value: 'evgsoldatenko@gmail.com', href: 'mailto:evgsoldatenko@gmail.com' },
             { label: phone, value: '+372 (29) 112 77 43', href: 'tel:+375291127743' },
@@ -177,26 +163,32 @@ export default function ContactClient({
             >
               <div className="text-[rgb(var(--primary))] font-mono text-xs mb-2 uppercase tracking-tighter">[{item.label}]</div>
               {item.href ? (
-                <a href={item.href} className="text-xl font-bold hover:text-[rgb(var(--primary))] transition-colors">{item.value}</a>
+                <a href={item.href} className="text-lg md:text-xl font-bold hover:text-[rgb(var(--primary))] transition-colors">{item.value}</a>
               ) : (
-                <p className="text-xl font-bold">{item.value}</p>
+                <p className="text-lg md:text-xl font-bold">{item.value}</p>
               )}
             </motion.div>
           ))}
         </div>
 
-        {/* --- ОБНОВЛЕНИЕ: Социальные сети с реальными ссылками --- */}
-        <div className="mt-24 mb-24 text-center">
+        {/* --- ОБНОВЛЕННЫЙ БЛОК СОЦИАЛЬНЫХ СЕТЕЙ --- */}
+        <div className="mt-16 md:mt-24 mb-16 md:mb-24 text-center">
           <h3 className="section-subheading !mb-8">{social_title}</h3>
-          <div className="flex justify-center gap-6">
+          
+          {/* 
+            flex-wrap: разрешает перенос элементов на новую строку
+            gap-x-6: горизонтальный отступ между элементами
+            gap-y-4: вертикальный отступ, который появится при переносе
+          */}
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-4">
             {socialLinks.map((social) => (
               <motion.a
                 key={social.name}
                 href={social.url}
-                target="_blank" // Открывать в новой вкладке
-                rel="noopener noreferrer" // Для безопасности
-                whileHover={{ y: -10, color: 'rgb(var(--primary))' }}
-                className="text-sm uppercase tracking-[0.3em] font-bold border-b-2 border-transparent hover:border-[rgb(var(--primary))] pb-1 transition-all"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ y: -5, color: 'rgb(var(--primary))' }} // Убрали y: -10, чтобы скачок был менее резким
+                className="text-sm uppercase tracking-[0.2em] font-bold border-b-2 border-transparent hover:border-[rgb(var(--primary))] pb-1 transition-all"
               >
                 {social.name}
               </motion.a>
