@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 // --- Вспомогательные компоненты (без изменений) ---
 const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) => (
@@ -18,6 +18,7 @@ const GlitchChar = ({ char, top, left, right, bottom, duration, delay }: any) =>
 // --- Основной компонент фона ---
 export default function InteractiveBackground() {
   const [isMobile, setIsMobile] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -35,6 +36,24 @@ export default function InteractiveBackground() {
   const tiltX = useSpring(0, springConfig);
   const tiltY = useSpring(0, springConfig);
 
+  // --- НОВИНКА: Функция для запроса разрешений на iOS ---
+  const requestOrientationPermission = async () => {
+    // Проверяем, существует ли функция (только на iOS 13+)
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      try {
+        const permissionState = await (DeviceOrientationEvent as any).requestPermission();
+        if (permissionState === 'granted') {
+          setPermissionGranted(true);
+        }
+      } catch (error) {
+        console.error("Error requesting device orientation permission:", error);
+      }
+    } else {
+      // Для Android и старых iOS, где разрешение не требуется
+      setPermissionGranted(true);
+    }
+  };
+
   useEffect(() => {
     if (!isMobile) {
       const handleMouseMove = (e: MouseEvent) => {
@@ -43,7 +62,9 @@ export default function InteractiveBackground() {
       };
       window.addEventListener('mousemove', handleMouseMove);
       return () => window.removeEventListener('mousemove', handleMouseMove);
-    } else {
+    } 
+    // --- ИЗМЕНЕНИЕ: Добавляем обработчик только ПОСЛЕ получения разрешения ---
+    else if (isMobile && permissionGranted) {
       const handleOrientation = (event: DeviceOrientationEvent) => {
         const gamma = event.gamma || 0;
         const beta = event.beta || 0;
@@ -53,7 +74,7 @@ export default function InteractiveBackground() {
       window.addEventListener('deviceorientation', handleOrientation);
       return () => window.removeEventListener('deviceorientation', handleOrientation);
     }
-  }, [isMobile, mouseX, mouseY, tiltX, tiltY]);
+  }, [isMobile, permissionGranted, mouseX, mouseY, tiltX, tiltY]);
 
   const motionSourceX = isMobile ? tiltX : mouseX;
   const motionSourceY = isMobile ? tiltY : mouseY;
@@ -73,56 +94,46 @@ export default function InteractiveBackground() {
     }));
   }, [starCount, isMobile]);
 
-  // --- ОПТИМИЗАЦИЯ: Логика отрисовки на Canvas по событию ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      // Перерисовываем один раз при изменении размера окна
       render(); 
     };
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = `rgb(${getComputedStyle(document.documentElement).getPropertyValue('--primary')})`;
-
       stars.forEach(star => {
         const offsetX = motionSourceX.get() * star.depth;
         const offsetY = motionSourceY.get() * star.depth;
-
         let x = (star.x + offsetX) % canvas.width;
         let y = (star.y + offsetY) % canvas.height;
         if (x < 0) x += canvas.width;
         if (y < 0) y += canvas.height;
-
         ctx.beginPath();
         ctx.arc(x, y, star.size, 0, 2 * Math.PI);
         ctx.fill();
       });
     };
 
-    // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
-    // Подписываемся на изменения MotionValue и вызываем render
     const unsubscribeX = motionSourceX.on("change", render);
     const unsubscribeY = motionSourceY.on("change", render);
 
-    resizeCanvas(); // Первоначальная отрисовка
+    resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Отписываемся от событий при размонтировании компонента
     return () => {
       unsubscribeX();
       unsubscribeY();
       window.removeEventListener('resize', resizeCanvas);
     };
   }, [stars, motionSourceX, motionSourceY]);
-
 
   const cursorX = useSpring(-100, { stiffness: 300, damping: 30 });
   const cursorY = useSpring(-100, { stiffness: 300, damping: 30 });
@@ -139,6 +150,23 @@ export default function InteractiveBackground() {
 
   return (
     <div className="fixed inset-0 z-[-1] pointer-events-none">
+      {/* --- НОВИНКА: Кнопка для запроса разрешений на мобильных --- */}
+      {isMobile && !permissionGranted && (
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          onClick={requestOrientationPermission}
+          // Стилизуем кнопку, чтобы она была заметной, но не навязчивой
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 
+                     bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] 
+                     text-xs font-bold uppercase tracking-widest text-[rgb(var(--foreground))] 
+                     pointer-events-auto !rounded-none"
+        >
+          Enable Motion
+        </motion.button>
+      )}
+
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
            style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '60px 60px' }} 
       />

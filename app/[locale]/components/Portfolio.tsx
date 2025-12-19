@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import InteractiveBackground from '../components/InteractiveBackground';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 // Интерфейсы (без изменений)
 interface Project {
@@ -181,9 +182,9 @@ export default function PortfolioClient({ title, intro }: PortfolioClientProps) 
           whileHover={{ scale: 1.05 }}
           className="inline-block"
         >
-          <a href="#contact" className="text-2xl font-bold text-[rgb(var(--primary))] hover:opacity-70 transition-opacity">
+          <Link href="/contact" className="text-2xl font-bold text-[rgb(var(--primary))] hover:opacity-70 transition-opacity">
             {t('cta')} →
-          </a>
+          </Link>
         </motion.div>
       </div>
     </div>

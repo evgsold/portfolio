@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from '../contexts/ThemeContext';
-import { motion, AnimatePresence, useScroll } from 'framer-motion'; // <-- Убрали useSpring
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
 
 export default function Navigation({ locale }: { locale: string }) {
   const t = useTranslations('navigation');
@@ -15,9 +15,7 @@ export default function Navigation({ locale }: { locale: string }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
-  // --- ОПТИМИЗАЗАЦИЯ: Убираем useSpring, используем scrollYProgress напрямую ---
   const { scrollYProgress } = useScroll();
-  // const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 }); // <-- Эта строка больше не нужна
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -153,12 +151,10 @@ export default function Navigation({ locale }: { locale: string }) {
           </div>
         </div>
 
-        {/* --- ОПТИМИЗАЦИЯ: Прямое использование scrollYProgress и добавление тени --- */}
         <motion.div 
           className="absolute bottom-0 left-0 right-0 h-[3px] bg-[rgb(var(--primary))] origin-left will-change-transform"
           style={{ 
             scaleX: scrollYProgress,
-            // Добавляем легкую тень для объема, которая будет видна только когда линия активна
             boxShadow: "0 2px 10px rgba(var(--primary-rgb), 0.5)"
           }}
         />
@@ -173,14 +169,37 @@ export default function Navigation({ locale }: { locale: string }) {
             exit="closed"
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[105] bg-[rgb(var(--card-bg))] flex flex-col will-change-transform"
-            onClick={() => setIsMenuOpen(false)}
           >
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                  style={{ backgroundImage: 'linear-gradient(rgb(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary)) 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
             />
 
-            <div className="relative flex-1 flex flex-col justify-center px-8">
-              <div className="space-y-8">
+            {/* --- НОВИНКА: Кнопка закрытия (крестик) --- */}
+            <motion.button
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+              whileHover={{ scale: 1.2, rotate: 90 }}
+              onClick={(e) => {
+                e.stopPropagation(); // Предотвращаем закрытие меню по клику на родителя
+                setIsMenuOpen(false);
+              }}
+              className="absolute top-6 right-6 z-[115] w-12 h-12 flex items-center justify-center will-change-transform"
+              aria-label={t('close')}
+            >
+              <svg className="w-8 h-8 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
+
+            <div 
+              className="relative flex-1 flex flex-col justify-center px-8"
+              onClick={() => setIsMenuOpen(false)} // Сохраняем возможность закрыть по клику на фон
+            >
+              <div 
+                className="space-y-8"
+                onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие по клику на сами ссылки
+              >
                 {navLinks.map((link) => (
                   <motion.div
                     key={link.path}
@@ -200,7 +219,10 @@ export default function Navigation({ locale }: { locale: string }) {
                 ))}
               </div>
 
-              <div className="mt-20 pt-10 border-t border-[rgb(var(--border-color))] flex justify-between items-end">
+              <div 
+                className="mt-20 pt-10 border-t border-[rgb(var(--border-color))] flex justify-between items-end"
+                onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие по клику на нижний блок
+              >
                 <div className="space-y-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-[rgb(var(--muted-fg))]">{t('language')}</p>
                   <div className="flex gap-4">
