@@ -1,0 +1,65 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "portfolio": "Portfolio",
+    "contact": "Contact",
+    "menu": "Menu",
+    "mainMenu": "Main Menu",
+    "language": "Language",
+    "backToTop": "Back to top"
+  },
+  "home": {
+    "headline": "Crafting Digital Experiences, One Line of Code at a Time.",
+    "intro": "Hello! I'm Eugene, a full-stack developer based in Minsk. I design and build beautiful, functional web applications.",
+    "philosophy": "My approach is centered around creating intuitive user experiences backed by clean, efficient, and scalable code. I believe the best products are born from a passion for both design and technology.",
+    "skill1_title": "Frontend Development",
+    "skill1_desc": "Building responsive and interactive user interfaces with modern technologies like React and Next.js.",
+    "skill2_title": "Backend Development",
+    "skill2_desc": "Designing robust server-side logic, APIs, and database structures using Node.js, Python, and SQL/NoSQL.",
+    "skill3_title": "UI/UX & Design",
+    "skill3_desc": "Focusing on user-centric design principles to create engaging and easy-to-use digital products."
+  },
+  "about": {
+    "title": "About Me",
+    "description": "I am a passionate developer with a love for creating elegant solutions to complex problems. My journey in web development began with a simple 'Hello, World!' and has since grown into a full-fledged passion for building beautiful, high-performance digital experiences. I thrive in collaborative environments and am always eager to learn new technologies.",
+    "journey_title": "My Journey So Far",
+    "experience_label": "Years of Experience",
+    "projects_label": "Projects Completed",
+    "toolbox_title": "My Core Toolbox"
+  },
+  "contact": {
+    "title": "Let's Connect",
+    "intro": "Have a project in mind, a question, or just want to say hello? I'd love to hear from you. Fill out the form below and I'll get back to you as soon as possible.",
+    "name_label": "Your Name",
+    "email_label": "Your Email",
+    "message_label": "Your Message",
+    "send_button": "Send Message",
+    "sending_button": "Sending...",
+    "success_title": "Message Sent!",
+    "success_text": "Thank you for reaching out. I'll be in touch shortly.",
+    "direct_contact_title": "Or Reach Out Directly",
+    "social_title": "Follow Me Online",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "location_value": "Belarus, Minsk"
+  },
+  "portfolio": {
+    "title": "My Work",
+    "intro": "Here are some of the projects I'm proud to have worked on. Each one was a unique challenge and a great learning experience. Hover over a card to see the details.",
+    "projectLabel": "PROJECT",
+    "liveDemoButton": "Live Demo",
+    "sourceCodeButton": "Source Code",
+    "cta": "Let's build something together"
+  }
+}
