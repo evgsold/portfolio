@@ -37,34 +37,34 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
   return (
-    <section 
+    <section
       ref={sectionRef}
-      className={`relative overflow-hidden 
+      className={`relative overflow-hidden
                  md:py-40 ${isEven ? 'md:portfolio-section' : 'md:portfolio-section-alt'}
                  py-16`}
     >
       {/* --- ИЗМЕНЕНИЕ: Адаптируем размер и позицию номера для мобильных --- */}
-      <motion.div 
+      <motion.div
         style={{ y: yNumber }}
-        className="absolute top-4 md:top-10 left-1/2 -translate-x-1/2 
+        className="absolute top-4 md:top-10 left-1/2 -translate-x-1/2
                    text-[10rem] md:text-[20rem]  // <-- Адаптивный размер шрифта
-                   font-black text-[rgb(var(--primary))] 
-                   opacity-[0.03] dark:opacity-[0.05] 
+                   font-black text-[rgb(var(--primary))]
+                   opacity-[0.03] dark:opacity-[0.05]
                    pointer-events-none select-none z-0"
       >
         0{index + 1}
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div 
+        <motion.div
           style={{ opacity }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-24 items-center"
         >
-          <motion.div 
+          <motion.div
             style={{ y: yImage }}
             className={`lg:order-${isEven ? '2' : '1'}`}
           >
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.02 }}
               className="project-image-wrapper group relative !rounded-none"
             >
@@ -82,7 +82,7 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
           </motion.div>
 
           <div className={`lg:order-${isEven ? '1' : '2'}`}>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
@@ -109,18 +109,18 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
                 ))}
               </div>
               <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 pt-6">
-                <motion.a 
+                <motion.a
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  href={project.demoUrl} 
+                  href={project.demoUrl}
                   className="button button-primary text-center !py-3 md:!py-4 !rounded-none"
                 >
                   {t('liveDemoButton')}
                 </motion.a>
-                <motion.a 
+                <motion.a
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  href={project.githubUrl} 
+                  href={project.githubUrl}
                   className="button button-secondary text-center !py-3 md:!py-4 !rounded-none"
                 >
                   {t('sourceCodeButton')}
@@ -134,14 +134,47 @@ function ProjectSection({ project, isEven, index }: { project: Project, isEven: 
   );
 }
 
-// Основной компонент страницы (без изменений)
+// Основной компонент страницы
 export default function PortfolioClient({ title, intro }: PortfolioClientProps) {
   const t = useTranslations('portfolio');
 
   const projects = [
-    { id: 1, title: 'E-Commerce Platform', description: 'A full-featured online shopping platform with payment integration and real-time inventory tracking.', technologies: ['React', 'Node.js', 'Stripe'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
-    { id: 2, title: 'Task Management App', description: 'Collaborative task management tool with real-time updates, team workspaces, and detailed analytics.', technologies: ['Next.js', 'TypeScript', 'Socket.io'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
-    { id: 3, title: 'Weather Dashboard', description: 'Beautiful weather application with interactive maps, historical data, and 7-day forecasts.', technologies: ['React', 'API', 'Chart.js'], image: '/2006BA1212.jpg', demoUrl: '#', githubUrl: '#' },
+    {
+      id: 1,
+      title: t('project1_title'),
+      description: t('project1_desc'),
+      technologies: ['Next.js', 'TypeScript', 'Firebase Auth', 'Firestore', 'Tailwind CSS'],
+      image: '/projects/charming.png',
+      demoUrl: 'https://charming.by',
+      githubUrl: 'https://github.com/evgsold/beauty'
+    },
+    {
+      id: 2,
+      title: t('project2_title'),
+      description: t('project2_desc'),
+      technologies: ['Next.js', 'TypeScript', 'Firebase', 'Tailwind CSS', 'Framer Motion'],
+      image: '/projects/3dfabriq.png',
+      demoUrl: 'https://3dfabriq.store',
+      githubUrl: 'https://github.com/evgsold/luxe'
+    },
+    {
+      id: 3,
+      title: t('project3_title'),
+      description: t('project3_desc'),
+      technologies: ['Next.js', 'TypeScript', 'Firebase Hosting', 'GSAP', 'Framer Motion'],
+      image: '/projects/danik-portfolio.png',
+      demoUrl: 'https://fluffy-goggles-three.vercel.app/',
+      githubUrl: 'https://github.com/evgsold/fluffy-goggles'
+    },
+    {
+      id: 4,
+      title: t('project4_title'),
+      description: t('project4_desc'),
+      technologies: ['Next.js', 'TypeScript', 'Firebase', 'Tailwind CSS'],
+      image: '/projects/nasty-portfolio.png',
+      demoUrl: 'https://nasty-portfolio.vercel.app/',
+      githubUrl: 'https://github.com/evgsold/Nasty-portfolio'
+    }
   ];
 
   return (
@@ -168,11 +201,11 @@ export default function PortfolioClient({ title, intro }: PortfolioClientProps) 
 
       <div className="relative">
         {projects.map((project, index) => (
-          <ProjectSection 
-            key={project.id} 
-            project={project} 
+          <ProjectSection
+            key={project.id}
+            project={project}
             index={index}
-            isEven={index % 2 !== 0} 
+            isEven={index % 2 !== 0}
           />
         ))}
       </div>

@@ -123,14 +123,14 @@ export default function AboutClient({
               // --- ОПТИМИЗАЦИЯ: Добавляем will-change для плавной анимации при наведении ---
               className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none will-change-transform"
             >
-              <div className="stats-number">3+</div>
+              <div className="stats-number">1+</div>
               <div className="stats-label uppercase tracking-widest text-xs mt-2">{experience_label}</div>
             </motion.div>
             <motion.div 
               whileHover={{ y: -5 }}
               className="text-center p-8 bg-[rgb(var(--card-bg))] border border-[rgb(var(--border-color))] !rounded-none will-change-transform"
             >
-              <div className="stats-number">20+</div>
+              <div className="stats-number">5+</div>
               <div className="stats-label uppercase tracking-widest text-xs mt-2">{projects_label}</div>
             </motion.div>
           </div>

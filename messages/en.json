@@ -56,10 +56,18 @@
   },
   "portfolio": {
     "title": "My Work",
-    "intro": "Here are some of the projects I'm proud to have worked on. Each one was a unique challenge and a great learning experience. Hover over a card to see the details.",
+    "intro": "Here are some of the projects I'm proud of. Each one was a unique challenge and a great learning experience. Hover over a card to see the details.",
     "projectLabel": "PROJECT",
     "liveDemoButton": "Live Demo",
     "sourceCodeButton": "Source Code",
-    "cta": "Let's build something together"
+    "cta": "Let's build something together",
+    "project1_title": "Charming.by Platform",
+    "project1_desc": "A web platform created for direct interaction between beauty industry professionals and their clients. The solution includes artist profiles, work portfolios, an online booking system, and reviews. Developed with Next.js and Firebase to ensure high speed and scalability.",
+    "project2_title": "Catalog Website '3DFabriq'",
+    "project2_desc": "An elegant catalog website for a designer lamp store. Implemented fast product search and filtering. Utilizes Server-Side Rendering (SSR) in Next.js for instant page loads and improved search engine indexing.",
+    "project3_title": "Portfolio for a UX/UI Designer",
+    "project3_desc": "A minimalist and interactive portfolio that highlights the designer's work. Smooth animations with Framer Motion and GSAP create an impressive user experience. The project is deployed on Firebase Hosting.",
+    "project4_title": "Portfolio for a Graphic Designer",
+    "project4_desc": "A stylish portfolio. Responsive design and image optimization in Next.js ensure a perfect display on any device."
   }
 }

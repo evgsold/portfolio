@@ -103,11 +103,11 @@ export default function HeroClient({
               </p>
               <div className="flex gap-8">
                 <div>
-                  <div className="stats-number text-4xl font-black">3+</div>
+                  <div className="stats-number text-4xl font-black">1+</div>
                   <div className="stats-label text-xs uppercase tracking-widest">{tAbout('experience_label')}</div>
                 </div>
                 <div>
-                  <div className="stats-number text-4xl font-black">20+</div>
+                  <div className="stats-number text-4xl font-black">5+</div>
                   <div className="stats-label text-xs uppercase tracking-widest">{tAbout('projects_label')}</div>
                 </div>
               </div>
