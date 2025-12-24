@@ -1,8 +1,40 @@
 import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next';
 import HeroClient from './components/Hero'; // Убедитесь, что путь правильный
 
 interface HeroProps {
   locale: string;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{locale: string}> }): Promise<Metadata> {
+  const {locale} = await params;
+  const t = await getTranslations('home');
+  const baseUrl = 'https://portfolio-pied-pi-a0rx8b1qju.vercel.app';
+  
+  return {
+    title: t('headline'),
+    description: t('intro'),
+    openGraph: {
+      title: t('headline'),
+      description: t('intro'),
+      locale: locale,
+      url: `${baseUrl}/${locale}`,
+      images: [
+        {
+          url: `${baseUrl}/me.jpg`,
+          width: 1200,
+          height: 630,
+          alt: t('headline'),
+        },
+      ],
+    },
+    twitter: {
+      title: t('headline'),
+      description: t('intro'),
+      card: 'summary_large_image',
+      images: [`${baseUrl}/me.jpg`],
+    },
+  };
 }
 
 export default async function Hero({ locale }: HeroProps) {
