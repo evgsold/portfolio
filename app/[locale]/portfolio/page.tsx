@@ -4,8 +4,13 @@ import PortfolioClient from '../components/Portfolio';
 import Breadcrumbs from '../components/Breadcrumbs';
 import PortfolioStructuredData from '../components/PortfolioStructuredData';
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
-  const t = await getTranslations('portfolio');
+// Corrected generateMetadata function
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  // 1. Destructure params first
+  const { locale } = params; 
+  
+  // 2. Pass locale explicitly to getTranslations
+  const t = await getTranslations({ locale, namespace: 'portfolio' });
   const baseUrl = 'https://portfolio-pied-pi-a0rx8b1qju.vercel.app';
   
   return {
@@ -43,8 +48,13 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
-export default async function PortfolioPage({ params: { locale } }: { params: { locale: string } }) {
-  const t = await getTranslations('portfolio');
+// Corrected PortfolioPage component
+export default async function PortfolioPage({ params }: { params: { locale: string } }) {
+  // 1. Destructure params first
+  const { locale } = params; 
+  
+  // 2. Pass locale explicitly to getTranslations
+  const t = await getTranslations({ locale, namespace: 'portfolio' });
 
   return (
     <>
